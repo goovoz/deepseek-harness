@@ -12,9 +12,15 @@ on:
         type: string
         default: master
         required: true
+      publish_release:
+        description: '发布到 Releases：tag 为 linux-x64-v<版本>，重复运行会覆盖同名附件与说明'
+        type: boolean
+        default: true
+        required: true
 
 permissions:
-  contents: read
+  # Creating the release and replacing its assets needs write access to contents.
+  contents: write
 
 concurrency:
   group: linux-desktop-package
@@ -31,6 +37,7 @@ jobs:
       DSH_TELEMETRY_DISABLED: '1'
     steps:
       - uses: actions/checkout@v4
+        id: checkout
         with:
           persist-credentials: false
           ref: ${{ inputs.source_ref }}
@@ -90,6 +97,53 @@ jobs:
             find apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts \
               -maxdepth 1 -type f -printf '| `%f` | %s bytes |\n' | sort
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish GitHub release
+        if: success() && inputs.publish_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILT_SHA: ${{ steps.checkout.outputs.commit }}
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./apps/desktop/package.json').version")
+          tag="linux-x64-v${version}"
+          artifact_dir=apps/desktop/.desktop-build/targets/linux-x64/unsigned-artifacts
+          appimage=$(find "$artifact_dir" -maxdepth 1 -name '*.AppImage' -print -quit)
+          name=$(basename "$appimage")
+          sha=$(sha256sum "$appimage" | cut -d' ' -f1)
+          notes="$RUNNER_TEMP/release-notes.md"
+          checksum="$RUNNER_TEMP/$name.sha256"
+          printf '%s  %s\n' "$sha" "$name" > "$checksum"
+          {
+            printf '未签名的 Linux amd64 桌面构建，由本 fork 的 `Package Desktop · Linux · x64` 工作流产出。\n\n'
+            printf '| 项 | 值 |\n| --- | --- |\n'
+            printf '| 构建提交 | `%s` |\n' "${BUILT_SHA::9}"
+            printf '| 工作流运行 | [#%s](%s/%s/actions/runs/%s) |\n' \
+              "$GITHUB_RUN_NUMBER" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+            printf '| 版本 | `%s` |\n' "$version"
+            printf '| 文件 | `%s`（%s 字节） |\n' "$name" "$(stat -c %s "$appimage")"
+            printf '| SHA-256 | `%s` |\n\n' "$sha"
+            printf '## 运行\n\n```bash\nchmod +x %s\n./%s\n```\n\n' "$name" "$name"
+            printf '没有 FUSE 的系统用 `--appimage-extract-and-run`；若报沙箱权限错误，追加 `--no-sandbox`。\n\n'
+            printf '## 已知限制\n\n'
+            printf -- '- **未签名**：不参与上游的签名 / 公证与自动更新链路，仅供本机使用。\n'
+            printf -- '- **Office→PDF 在 Linux 上不可用**：上游未发布 Linux 原生 LibreOfficeKit 引擎，且 kit 在 asar 内误判引擎状态、跳过 wasm 回退。\n'
+            printf -- '- 仅覆盖 `linux-x64`。\n'
+          } > "$notes"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$appimage" "$checksum" --clobber
+            gh release edit "$tag" --notes-file "$notes"
+            echo "updated release $tag"
+          else
+            prerelease=()
+            case "$version" in
+              *-*) prerelease=(--prerelease) ;;
+            esac
+            gh release create "$tag" "$appimage" "$checksum" \
+              --title "Linux x64 desktop build · $version" \
+              --notes-file "$notes" --target "$BUILT_SHA" ${prerelease[@]+"${prerelease[@]}"}
+            echo "created release $tag"
+          fi
 
       - name: Retain packaging diagnostics
         if: always()
