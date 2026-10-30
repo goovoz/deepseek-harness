@@ -23,6 +23,7 @@
         "apps/desktop/scripts/prepare-runtime.ts",
         "apps/desktop/scripts/prepare-dsh.ts",
         "apps/desktop/scripts/prepare-cli.ts",
+        "apps/desktop/scripts/smoke-runtime.ts",
         "apps/desktop/scripts/smoke-packaged-runtime.ts",
         "apps/desktop/scripts/desktop-toolchain-preflight.ts",
         "apps/desktop/package.json",
