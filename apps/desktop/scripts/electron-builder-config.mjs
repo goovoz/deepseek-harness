@@ -254,9 +254,13 @@ export function createElectronBuilderConfig(
       },
       target: ['nsis'],
     },
+    // [dsh-fork L1] fork-patch: linux-x64-desktop —— 见 docs/FORK-PATCHES.md
     linux: {
       category: 'Development',
       target: ['AppImage'],
+      // The package name is scoped, so electron-builder cannot derive a safe executable name.
+      executableName: 'deepseek-harness',
+      icon: fileURLToPath(new URL('../resources/icon.png', import.meta.url)),
     },
     nsis: {
       uninstallDisplayName: '${productName}',
