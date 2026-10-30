@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "upstream": "deepseek-ai/deepseek-harness",
+  "upstreamBranch": "master",
+  "patches": [
+    {
+      "id": "linux-x64-desktop",
+      "status": "active",
+      "summary": "Add a linux-x64 Desktop packaging target and build the unsigned AppImage on a GitHub-hosted Ubuntu runner",
+      "trailer": "Fork-Patch: linux-x64-desktop",
+      "detector": null,
+      "touches": [
+        "apps/desktop/scripts/desktop-build-paths.mjs",
+        "apps/desktop/scripts/desktop-build-paths.d.mts",
+        "apps/desktop/scripts/package-target.ts",
+        "apps/desktop/scripts/desktop-package-environment.mjs",
+        "apps/desktop/scripts/desktop-package-environment.d.mts",
+        "apps/desktop/scripts/desktop-auto-update-environment.mjs",
+        "apps/desktop/scripts/desktop-auto-update-environment.d.mts",
+        "apps/desktop/scripts/desktop-release-store.ts",
+        "apps/desktop/scripts/desktop-upload-plan.ts",
+        "apps/desktop/scripts/prepare-runtime.ts",
+        "apps/desktop/scripts/prepare-dsh.ts",
+        "apps/desktop/scripts/prepare-cli.ts",
+        "apps/desktop/scripts/smoke-packaged-runtime.ts",
+        "apps/desktop/scripts/desktop-toolchain-preflight.ts",
+        "apps/desktop/package.json",
+        "package.json"
+      ],
+      "retireWhen": "apps/desktop/scripts/package-target.ts declares a linux-x64 target upstream and a linux package workflow exists",
+      "notes": "Unsigned only. Upstream signs and notarizes mac/win on self-hosted release machines; the fork builds the AppImage on ubuntu-latest without any signing material."
+    }
+  ]
+}
