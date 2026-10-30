@@ -29,8 +29,6 @@ jobs:
         shell: bash
     env:
       DSH_TELEMETRY_DISABLED: '1'
-      DSH_DESKTOP_PACKAGE_CACHE_DIR: ${{ runner.tool_cache }}/dsh-desktop-package-cache
-      PNPM_CONFIG_STORE_DIR: ${{ runner.tool_cache }}/dsh-desktop-package-cache/workspace-pnpm-store
     steps:
       - uses: actions/checkout@v4
         with:
@@ -56,6 +54,17 @@ jobs:
           npm install --global pnpm@11.28.5
           node -e "console.log(JSON.stringify({node:process.version,cpus:require('node:os').availableParallelism(),memoryGiB:(require('node:os').totalmem()/2**30).toFixed(1)}))"
           pnpm --version
+
+      - name: Configure package caches
+        # Keep the pnpm store and the prepared Electron/runtime downloads
+        # outside the checkout, so artifacts stay the only workspace payload.
+        env:
+          CACHE_ROOT: ${{ runner.tool_cache }}/dsh-desktop-package-cache
+        run: |
+          {
+            echo "DSH_DESKTOP_PACKAGE_CACHE_DIR=$CACHE_ROOT"
+            echo "PNPM_CONFIG_STORE_DIR=$CACHE_ROOT/workspace-pnpm-store"
+          } >> "$GITHUB_ENV"
 
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
