@@ -18,6 +18,7 @@
 | 运行时准备 | `prepare-runtime.ts` / `prepare-dsh.ts`：Electron 可执行文件路径按平台解析（Linux 取解包根目录的 `electron`），并补 `chmod 0755` |
 | CLI 启动器 | `prepare-cli.ts`：非 Windows 平台都补可执行位 |
 | 打包后校验 | `smoke-packaged-runtime.ts`：`linux-unpacked/` 布局与应用名 |
+| 发布策略 | `electron-builder-config.mjs`：未签名且非 Windows 时不再解析更新策略来源（Linux 没有签名链路） |
 | 类型声明 | `desktop-auto-update-environment.d.mts`、`desktop-release-store.ts`、`desktop-upload-plan.ts`：目标枚举纳入 `linux-x64` |
 | 脚本入口 | 根 `package.json` 与 `apps/desktop/package.json` 增加 `package:desktop:linux:x64` / `package:linux:x64` |
 

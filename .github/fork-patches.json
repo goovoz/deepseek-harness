@@ -13,6 +13,7 @@
         "apps/desktop/scripts/desktop-build-paths.mjs",
         "apps/desktop/scripts/desktop-build-paths.d.mts",
         "apps/desktop/scripts/package-target.ts",
+        "apps/desktop/scripts/electron-builder-config.mjs",
         "apps/desktop/scripts/desktop-package-environment.mjs",
         "apps/desktop/scripts/desktop-package-environment.d.mts",
         "apps/desktop/scripts/desktop-auto-update-environment.mjs",
